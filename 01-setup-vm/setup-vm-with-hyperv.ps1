@@ -2,9 +2,11 @@ Set-StrictMode -Version 3.0
 $PSDefaultParameterValues["*:Encoding"] = "utf8"
 $OutputEncoding = [Text.Encoding]::UTF8
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
-$MyFileNameWithoutExt = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.name);
+$FileNameWithoutExtension = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.name);
+$FileLocation = (Split-Path -Path $MyInvocation.MyCommand.Path -Parent)
 $Now = Get-Date -Format yyyyMMdd_HHmmss
-$LogFile = "${MyFileNameWithoutExt}_${Now}.log"
+$LogFileName = "${FileNameWithoutExtension}_${Now}.log"
+$LogFile = Join-Path -Path $FileLocation -ChildPath $LogFileName
 Start-Transcript $LogFile -append
 
 #----------------------------------------------
@@ -28,7 +30,7 @@ $OsVersion = "24.04.3"
 $VmPurpose = "GitLab"
 $VmName = "${OsName} ${OsVersion}(${VmPurpose})"
 $VmMemoryStartupGigaBytes = 4
-$IsoPath = "C:\Users\xxxxx\Desktop\System\os\Ubuntu Desktop\ubuntu-24.04.3-desktop-amd64.iso"
+$IsoPath = "C:\Users\Kuroki\Desktop\system\os\Ubuntu Desktop\ubuntu-24.04.3-desktop-amd64.iso"
 $VMPath = "E:\ProgramData\Microsoft\Windows\Hyper-V\$VMName"
 $VHDPath = "$VMPath\$VMName.vhdx"
 $VHDGigaBytesSize = 50GB
@@ -41,13 +43,25 @@ Get-VM | ForEach-Object {
 
     $proc = Get-VMProcessor -VMName $vm.Name
     $mem = Get-VMMemory    -VMName $vm.Name
-    $fw = Get-VMFirmware  -VMName $vm.Name
-    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name)
-    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name)
-    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name)
-
+    $fw = $null
+    try { $fw = Get-VMFirmware -VMName $vm.Name -ErrorAction Stop } catch { $fw = $null }
+    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name -ErrorAction SilentlyContinue)
+    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name -ErrorAction SilentlyContinue)
+    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name -ErrorAction SilentlyContinue)
     $max = @($nics.Count, $dvds.Count, $vhds.Count | Measure-Object -Maximum).Maximum
     if (-not $max -or $max -lt 1) { $max = 1 }
+    $secureBoot = if ($fw -and ($fw.PSObject.Properties.Name -contains 'SecureBoot')) { $fw.SecureBoot } else { $null }
+    $firstBootDev =
+    if ($fw -and ($fw.PSObject.Properties.Name -contains 'FirstBootDevice')) {
+        $fw.FirstBootDevice
+    }
+    elseif ($fw -and ($fw.PSObject.Properties.Name -contains 'BootOrder')) {
+        $bo = @($fw.BootOrder)
+        if ($bo.Count -ge 1) { $bo[0] } else { $null }
+    }
+    else {
+        $null
+    }
 
     for ($i = 0; $i -lt $max; $i++) {
         $nic = if ($i -lt $nics.Count) { $nics[$i] } else { $null }
@@ -65,13 +79,12 @@ Get-VM | ForEach-Object {
             "SwitchName     : $($nic.SwitchName)"
             "ISOPath        : $($dvd.Path)"
             "VHDPath        : $($vhd.Path)"
-            "SecureBoot     : $($fw.SecureBoot)"
-            "FirstBootDev   : $($fw.FirstBootDevice)"
+            "SecureBoot     : $secureBoot"
+            "FirstBootDev   : $firstBootDev"
             ""
         ) -join "`r`n"
     }
 } | Out-String -Width 4096
-
 
 # create folder for VM
 New-Item -ItemType Directory -Path $VMPath -Force
@@ -97,7 +110,6 @@ Set-VM -VMName $vmName `
 Add-VMDvdDrive -VMName $VMName `
     -Path $IsoPath
 
-# 起動順序（DVD優先にしてインストールへ）
 # set firmware(boot order, secure boot)
 # https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/set-vmfirmware
 Set-VMFirmware -VMName $VMName `
@@ -110,13 +122,25 @@ Get-VM | ForEach-Object {
 
     $proc = Get-VMProcessor -VMName $vm.Name
     $mem = Get-VMMemory    -VMName $vm.Name
-    $fw = Get-VMFirmware  -VMName $vm.Name
-    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name)
-    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name)
-    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name)
-
+    $fw = $null
+    try { $fw = Get-VMFirmware -VMName $vm.Name -ErrorAction Stop } catch { $fw = $null }
+    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name -ErrorAction SilentlyContinue)
+    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name -ErrorAction SilentlyContinue)
+    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name -ErrorAction SilentlyContinue)
     $max = @($nics.Count, $dvds.Count, $vhds.Count | Measure-Object -Maximum).Maximum
     if (-not $max -or $max -lt 1) { $max = 1 }
+    $secureBoot = if ($fw -and ($fw.PSObject.Properties.Name -contains 'SecureBoot')) { $fw.SecureBoot } else { $null }
+    $firstBootDev =
+    if ($fw -and ($fw.PSObject.Properties.Name -contains 'FirstBootDevice')) {
+        $fw.FirstBootDevice
+    }
+    elseif ($fw -and ($fw.PSObject.Properties.Name -contains 'BootOrder')) {
+        $bo = @($fw.BootOrder)
+        if ($bo.Count -ge 1) { $bo[0] } else { $null }
+    }
+    else {
+        $null
+    }
 
     for ($i = 0; $i -lt $max; $i++) {
         $nic = if ($i -lt $nics.Count) { $nics[$i] } else { $null }
@@ -134,14 +158,18 @@ Get-VM | ForEach-Object {
             "SwitchName     : $($nic.SwitchName)"
             "ISOPath        : $($dvd.Path)"
             "VHDPath        : $($vhd.Path)"
-            "SecureBoot     : $($fw.SecureBoot)"
-            "FirstBootDev   : $($fw.FirstBootDevice)"
+            "SecureBoot     : $secureBoot"
+            "FirstBootDev   : $firstBootDev"
             ""
         ) -join "`r`n"
     }
 } | Out-String -Width 4096
 
-
 # start up the VM
 # https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/start-vm
 Start-VM -Name $VMName
+
+Write-Host "Completed. Press Enter to exit…" -ForegroundColor Yellow
+[void] (Read-Host)
+
+Stop-Transcript
