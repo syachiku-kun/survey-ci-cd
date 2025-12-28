@@ -1,3 +1,12 @@
+Set-StrictMode -Version 3.0
+$PSDefaultParameterValues["*:Encoding"] = "utf8"
+$OutputEncoding = [Text.Encoding]::UTF8
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$MyFileNameWithoutExt = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.name);
+$Now = Get-Date -Format yyyyMMdd_HHmmss
+$LogFile = "${MyFileNameWithoutExt}_${Now}.log"
+Start-Transcript $LogFile -append
+
 #----------------------------------------------
 # Define variables
 # $OsName os name will be used in VM
@@ -18,39 +27,121 @@ $OsName = "Ubuntu Desktop"
 $OsVersion = "24.04.3"
 $VmPurpose = "GitLab"
 $VmName = "${OsName} ${OsVersion}(${VmPurpose})"
+$VmMemoryStartupGigaBytes = 4
 $IsoPath = "C:\Users\xxxxx\Desktop\System\os\Ubuntu Desktop\ubuntu-24.04.3-desktop-amd64.iso"
 $VMPath = "E:\ProgramData\Microsoft\Windows\Hyper-V\$VMName"
 $VHDPath = "$VMPath\$VMName.vhdx"
-$VHDSize = 80GB
+$VHDGigaBytesSize = 50GB
 $VMSwitch = "Hyper-V仮想スイッチ（外部）"     # 既存の仮想スイッチ名
+$VMCpuCount = 2
 
-# C:\ProgramData\Microsoft\Windows\Hyper-V\
-# C:\ProgramData\Microsoft\Windows\Virtual Hard Disks\Ubuntu Desktop 24.04.1(GitLab)_4A340DA9-9715-4E0E-9C78-9E3F72950E39.avhdx
-# Ubuntu Desktop 24.04.1(GitLab).vhdx
-# Ubuntu Desktop 24.04.1(GitLab)_0D43BB91-FBB3-4D1A-96D8-2BAAEEFBA00E.avhdx
-# フォルダ
-New-Item -ItemType Directory -Path $VMPath -Force | Out-Null
+# get statue(before)
+Get-VM | ForEach-Object {
+    $vm = $_
 
-# VM作成（Generation 2）
-New-VM -Name $VMName -Generation 2 -Path $VMPath -MemoryStartupBytes 4GB -SwitchName $VMSwitch
+    $proc = Get-VMProcessor -VMName $vm.Name
+    $mem = Get-VMMemory    -VMName $vm.Name
+    $fw = Get-VMFirmware  -VMName $vm.Name
+    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name)
+    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name)
+    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name)
 
-# ディスク作成＆接続
-New-VHD -Path $VHDPath -SizeBytes $VHDSize -Dynamic | Out-Null
-Add-VMHardDiskDrive -VMName $VMName -Path $VHDPath
+    $max = @($nics.Count, $dvds.Count, $vhds.Count | Measure-Object -Maximum).Maximum
+    if (-not $max -or $max -lt 1) { $max = 1 }
 
-# CPU数
-Set-VMProcessor -VMName $VMName -Count 2
+    for ($i = 0; $i -lt $max; $i++) {
+        $nic = if ($i -lt $nics.Count) { $nics[$i] } else { $null }
+        $dvd = if ($i -lt $dvds.Count) { $dvds[$i] } else { $null }
+        $vhd = if ($i -lt $vhds.Count) { $vhds[$i] } else { $null }
 
-# ISOをDVDとして接続
-Add-VMDvdDrive -VMName $VMName -Path $IsoPath
+        @(
+            "Name           : $($vm.Name)"
+            "VMPath         : $($vm.Path)"
+            "Generation     : $($vm.Generation)"
+            "MemoryStartup  : $([math]::Round($vm.MemoryStartup / 1GB, 2)) GB"
+            "CPUCount       : $($proc.Count)"
+            "StaticMemory   : $(-not $mem.DynamicMemoryEnabled)"
+            "AutoCheckpoint : $($vm.AutomaticCheckpointsEnabled)"
+            "SwitchName     : $($nic.SwitchName)"
+            "ISOPath        : $($dvd.Path)"
+            "VHDPath        : $($vhd.Path)"
+            "SecureBoot     : $($fw.SecureBoot)"
+            "FirstBootDev   : $($fw.FirstBootDevice)"
+            ""
+        ) -join "`r`n"
+    }
+} | Out-String -Width 4096
+
+
+# create folder for VM
+New-Item -ItemType Directory -Path $VMPath -Force
+
+# create VM(generation 2)
+# https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/new-vm
+New-VM -Name $VMName `
+    -Generation 2 `
+    -Path $VMPath `
+    -MemoryStartupBytes ($VmMemoryStartupGigaBytes * 1GB) `
+    -NewVHDPath $VHDPath `
+    -NewVHDSizeBytes ($VHDGigaBytesSize * 1GB) `
+    -SwitchName $VMSwitch
+
+# set VM
+# https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/set-vm
+Set-VM -VMName $vmName `
+    -ProcessorCount $VMCpuCount `
+    -StaticMemory -AutomaticCheckpointsEnabled $false
+
+# set DVD drive
+# https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/add-vmdvddrive
+Add-VMDvdDrive -VMName $VMName `
+    -Path $IsoPath
 
 # 起動順序（DVD優先にしてインストールへ）
-$dvd = Get-VMDvdDrive -VMName $VMName
-Set-VMFirmware -VMName $VMName -FirstBootDevice $dvd
+# set firmware(boot order, secure boot)
+# https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/set-vmfirmware
+Set-VMFirmware -VMName $VMName `
+    -FirstBootDevice (Get-VMDvdDrive -VMName $VMName) `
+    -EnableSecureBoot Off
 
-# Secure Boot（Linuxならテンプレを変えることが多い）
-# Windowsなら既定のままでOK、Linuxなら Off または "MicrosoftUEFICertificateAuthority" を使うことがあります
-Set-VMFirmware -VMName $VMName -EnableSecureBoot Off
+# get statue(after)
+Get-VM | ForEach-Object {
+    $vm = $_
 
-# 起動
+    $proc = Get-VMProcessor -VMName $vm.Name
+    $mem = Get-VMMemory    -VMName $vm.Name
+    $fw = Get-VMFirmware  -VMName $vm.Name
+    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name)
+    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name)
+    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name)
+
+    $max = @($nics.Count, $dvds.Count, $vhds.Count | Measure-Object -Maximum).Maximum
+    if (-not $max -or $max -lt 1) { $max = 1 }
+
+    for ($i = 0; $i -lt $max; $i++) {
+        $nic = if ($i -lt $nics.Count) { $nics[$i] } else { $null }
+        $dvd = if ($i -lt $dvds.Count) { $dvds[$i] } else { $null }
+        $vhd = if ($i -lt $vhds.Count) { $vhds[$i] } else { $null }
+
+        @(
+            "Name           : $($vm.Name)"
+            "VMPath         : $($vm.Path)"
+            "Generation     : $($vm.Generation)"
+            "MemoryStartup  : $([math]::Round($vm.MemoryStartup / 1GB, 2)) GB"
+            "CPUCount       : $($proc.Count)"
+            "StaticMemory   : $(-not $mem.DynamicMemoryEnabled)"
+            "AutoCheckpoint : $($vm.AutomaticCheckpointsEnabled)"
+            "SwitchName     : $($nic.SwitchName)"
+            "ISOPath        : $($dvd.Path)"
+            "VHDPath        : $($vhd.Path)"
+            "SecureBoot     : $($fw.SecureBoot)"
+            "FirstBootDev   : $($fw.FirstBootDevice)"
+            ""
+        ) -join "`r`n"
+    }
+} | Out-String -Width 4096
+
+
+# start up the VM
+# https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/start-vm
 Start-VM -Name $VMName
