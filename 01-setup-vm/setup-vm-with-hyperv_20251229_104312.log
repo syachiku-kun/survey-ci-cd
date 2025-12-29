@@ -1,0 +1,204 @@
+**********************
+PowerShell transcript start
+Start time: 20251229104312
+Username: HOSTNAME\whoami
+RunAs User: HOSTNAME\whoami
+Configuration Name: 
+Machine: HOSTNAME (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Program Files\WindowsApps\Microsoft.PowerShell_7.5.4.0_x64__8wekyb3d8bbwe\pwsh.dll
+Process ID: 21368
+PSVersion: 7.5.4
+PSEdition: Core
+GitCommitId: 7.5.4
+OS: Microsoft Windows 10.0.26200
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+Transcript started, output file is C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm\setup-vm-with-hyperv_20251229_104312.log
+
+Name                   Path
+----                   ----
+CentOS Stream 9        E:\ProgramData\Microsoft\Windows\Hyper-V\CentOS Stream 9
+Debian 12.7.0          E:\ProgramData\Microsoft\Windows\Hyper-V\Debian 12.7.0
+Fedora Workstation 40  E:\ProgramData\Microsoft\Windows\Hyper-V\Fedora Workstation 40
+MIRACLE LINUX 9.4      E:\ProgramData\Microsoft\Windows\Hyper-V\MIRACLE LINUX 9.4
+TrueNAS CORE 13.0-U6.2 E:\ProgramData\Microsoft\Windows\Hyper-V\TrueNAS CORE 13.0-U6.2
+Ubuntu Desktop 24.04.1 E:\ProgramData\Microsoft\Windows\Hyper-V\Ubuntu Desktop 24.04.1
+
+Name                           Value
+----                           -----
+?                              True
+^                              
+$                              
+args                           {}
+ConfirmPreference              High
+DebugPreference                SilentlyContinue
+EnabledExperimentalFeatures    {}
+Error                          {}
+ErrorActionPreference          Continue
+ErrorView                      ConciseView
+ExecutionContext               System.Management.Automation.EngineIntrinsics
+false                          False
+FileLocation                   C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm
+FileNameWithoutExtension       setup-vm-with-hyperv
+FormatEnumerationLimit         4
+HOME                           C:\Users\whoami
+Host                           System.Management.Automation.Internal.Host.InternalHost
+InformationPreference          SilentlyContinue
+input                          System.Collections.ArrayList+ArrayListEnumeratorSimple
+IsCoreCLR                      True
+IsLinux                        False
+IsMacOS                        False
+IsoPath                        C:\Users\whoami\Desktop\system\os\Ubuntu Desktop\ubuntu-24.04.3-desktop-amd64.iso
+IsWindows                      True
+LogFile                        C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm\setup-vm-with-hyperv_20251229_104312.log
+LogFileName                    setup-vm-with-hyperv_20251229_104312.log
+MaximumHistoryCount            4096
+MyInvocation                   System.Management.Automation.InvocationInfo
+NestedPromptLevel              0
+Now                            20251229_104312
+null                           
+OsName                         Ubuntu Desktop
+OsVersion                      24.04.3
+OutputEncoding                 System.Text.UTF8Encoding+UTF8EncodingSealed
+PID                            21368
+PROFILE                        C:\Users\whoami\Documents\PowerShell\Microsoft.PowerShell_profile.ps1
+ProgressPreference             Continue
+PSBoundParameters              {}
+PSCommandPath                  C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm\setup-vm-with-hyperv.ps1
+PSCulture                      ja-JP
+PSDefaultParameterValues       {[*:Encoding, utf8]}
+PSEdition                      Core
+PSEmailServer                  
+PSHOME                         C:\Program Files\WindowsApps\Microsoft.PowerShell_7.5.4.0_x64__8wekyb3d8bbwe
+PSNativeCommandArgumentPassing Windows
+PSNativeCommandUseErrorAction… False
+PSScriptRoot                   C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm
+PSSessionApplicationName       wsman
+PSSessionConfigurationName     http://schemas.microsoft.com/powershell/Microsoft.PowerShell
+PSSessionOption                System.Management.Automation.Remoting.PSSessionOption
+PSStyle                        System.Management.Automation.PSStyle
+PSUICulture                    ja-JP
+PSVersionTable                 {[PSVersion, 7.5.4], [PSEdition, Core], [GitCommitId, 7.5.4], [OS, Microsoft Windows 10.0.26200]…}
+PWD                            C:\Users\whoami
+ShellId                        Microsoft.PowerShell
+StackTrace                     
+true                           True
+VerbosePreference              SilentlyContinue
+VHDGigaBytesSize               50
+VHDPath                        E:\ProgramData\Microsoft\Windows\Hyper-V\Virtual Hard Disks\Ubuntu Desktop 24.04.3(GitLab).vhdx
+VMCpuCount                     2
+VmMemoryStartupGigaBytes       4
+VmName                         Ubuntu Desktop 24.04.3(GitLab)
+VMPath                         E:\ProgramData\Microsoft\Windows\Hyper-V
+VmPurpose                      GitLab
+VMSwitch                       Hyper-V仮想スイッチ（外部）
+WarningPreference              Continue
+WhatIfPreference               False
+
+    Directory: E:\ProgramData\Microsoft\Windows
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d----          2025/12/29    10:42                Hyper-V
+
+Name             : Ubuntu Desktop 24.04.3(GitLab)
+State            : Off
+CpuUsage         : 0
+MemoryAssigned   : 0
+MemoryDemand     : 0
+MemoryStatus     : 
+Uptime           : 00:00:00
+Status           : 正常稼働中
+ReplicationState : Disabled
+Generation       : 2
+
+
+Name                           Path
+----                           ----
+CentOS Stream 9                E:\ProgramData\Microsoft\Windows\Hyper-V\CentOS Stream 9
+Debian 12.7.0                  E:\ProgramData\Microsoft\Windows\Hyper-V\Debian 12.7.0
+Fedora Workstation 40          E:\ProgramData\Microsoft\Windows\Hyper-V\Fedora Workstation 40
+MIRACLE LINUX 9.4              E:\ProgramData\Microsoft\Windows\Hyper-V\MIRACLE LINUX 9.4
+TrueNAS CORE 13.0-U6.2         E:\ProgramData\Microsoft\Windows\Hyper-V\TrueNAS CORE 13.0-U6.2
+Ubuntu Desktop 24.04.1         E:\ProgramData\Microsoft\Windows\Hyper-V\Ubuntu Desktop 24.04.1
+Ubuntu Desktop 24.04.3(GitLab) E:\ProgramData\Microsoft\Windows\Hyper-V\Ubuntu Desktop 24.04.3(GitLab)
+
+Name                           Value
+----                           -----
+?                              True
+^                              
+$                              
+args                           {}
+ConfirmPreference              High
+DebugPreference                SilentlyContinue
+EnabledExperimentalFeatures    {}
+Error                          {}
+ErrorActionPreference          Continue
+ErrorView                      ConciseView
+ExecutionContext               System.Management.Automation.EngineIntrinsics
+false                          False
+FileLocation                   C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm
+FileNameWithoutExtension       setup-vm-with-hyperv
+FormatEnumerationLimit         4
+HOME                           C:\Users\whoami
+Host                           System.Management.Automation.Internal.Host.InternalHost
+InformationPreference          SilentlyContinue
+input                          System.Collections.ArrayList+ArrayListEnumeratorSimple
+IsCoreCLR                      True
+IsLinux                        False
+IsMacOS                        False
+IsoPath                        C:\Users\whoami\Desktop\system\os\Ubuntu Desktop\ubuntu-24.04.3-desktop-amd64.iso
+IsWindows                      True
+LogFile                        C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm\setup-vm-with-hyperv_20251229_104312.log
+LogFileName                    setup-vm-with-hyperv_20251229_104312.log
+MaximumHistoryCount            4096
+MyInvocation                   System.Management.Automation.InvocationInfo
+NestedPromptLevel              0
+Now                            20251229_104312
+null                           
+OsName                         Ubuntu Desktop
+OsVersion                      24.04.3
+OutputEncoding                 System.Text.UTF8Encoding+UTF8EncodingSealed
+PID                            21368
+PROFILE                        C:\Users\whoami\Documents\PowerShell\Microsoft.PowerShell_profile.ps1
+ProgressPreference             Continue
+PSBoundParameters              {}
+PSCommandPath                  C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm\setup-vm-with-hyperv.ps1
+PSCulture                      ja-JP
+PSDefaultParameterValues       {[*:Encoding, utf8]}
+PSEdition                      Core
+PSEmailServer                  
+PSHOME                         C:\Program Files\WindowsApps\Microsoft.PowerShell_7.5.4.0_x64__8wekyb3d8bbwe
+PSNativeCommandArgumentPassing Windows
+PSNativeCommandUseErrorAction… False
+PSScriptRoot                   C:\Users\whoami\Desktop\git\repositories\syachiku-kun\survey-ci-cd\01-setup-vm
+PSSessionApplicationName       wsman
+PSSessionConfigurationName     http://schemas.microsoft.com/powershell/Microsoft.PowerShell
+PSSessionOption                System.Management.Automation.Remoting.PSSessionOption
+PSStyle                        System.Management.Automation.PSStyle
+PSUICulture                    ja-JP
+PSVersionTable                 {[PSVersion, 7.5.4], [PSEdition, Core], [GitCommitId, 7.5.4], [OS, Microsoft Windows 10.0.26200]…}
+PWD                            C:\Users\whoami
+ShellId                        Microsoft.PowerShell
+StackTrace                     
+true                           True
+VerbosePreference              SilentlyContinue
+VHDGigaBytesSize               50
+VHDPath                        E:\ProgramData\Microsoft\Windows\Hyper-V\Virtual Hard Disks\Ubuntu Desktop 24.04.3(GitLab).vhdx
+VMCpuCount                     2
+VmMemoryStartupGigaBytes       4
+VmName                         Ubuntu Desktop 24.04.3(GitLab)
+VMPath                         E:\ProgramData\Microsoft\Windows\Hyper-V
+VmPurpose                      GitLab
+VMSwitch                       Hyper-V仮想スイッチ（外部）
+WarningPreference              Continue
+WhatIfPreference               False
+Completed. Press Enter to exit…
+**********************
+PowerShell transcript end
+End time: 20251229104324
+**********************

@@ -30,61 +30,16 @@ $OsVersion = "24.04.3"
 $VmPurpose = "GitLab"
 $VmName = "${OsName} ${OsVersion}(${VmPurpose})"
 $VmMemoryStartupGigaBytes = 4
-$IsoPath = "C:\Users\Kuroki\Desktop\system\os\Ubuntu Desktop\ubuntu-24.04.3-desktop-amd64.iso"
-$VMPath = "E:\ProgramData\Microsoft\Windows\Hyper-V\$VMName"
-$VHDPath = "$VMPath\$VMName.vhdx"
-$VHDGigaBytesSize = 50GB
-$VMSwitch = "Hyper-V仮想スイッチ（外部）"     # 既存の仮想スイッチ名
+$IsoPath = "C:\Users\xxxxx\Desktop\system\os\Ubuntu Desktop\ubuntu-24.04.3-desktop-amd64.iso"
+$VMPath = "E:\ProgramData\Microsoft\Windows\Hyper-V"
+$VHDPath = "$VMPath\$VMName\Virtual Hard Disks\$VMName.vhdx"
+$VHDGigaBytesSize = 50
+$VMSwitch = "Hyper-V仮想スイッチ（外部）"
 $VMCpuCount = 2
 
 # get statue(before)
-Get-VM | ForEach-Object {
-    $vm = $_
-
-    $proc = Get-VMProcessor -VMName $vm.Name
-    $mem = Get-VMMemory    -VMName $vm.Name
-    $fw = $null
-    try { $fw = Get-VMFirmware -VMName $vm.Name -ErrorAction Stop } catch { $fw = $null }
-    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name -ErrorAction SilentlyContinue)
-    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name -ErrorAction SilentlyContinue)
-    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name -ErrorAction SilentlyContinue)
-    $max = @($nics.Count, $dvds.Count, $vhds.Count | Measure-Object -Maximum).Maximum
-    if (-not $max -or $max -lt 1) { $max = 1 }
-    $secureBoot = if ($fw -and ($fw.PSObject.Properties.Name -contains 'SecureBoot')) { $fw.SecureBoot } else { $null }
-    $firstBootDev =
-    if ($fw -and ($fw.PSObject.Properties.Name -contains 'FirstBootDevice')) {
-        $fw.FirstBootDevice
-    }
-    elseif ($fw -and ($fw.PSObject.Properties.Name -contains 'BootOrder')) {
-        $bo = @($fw.BootOrder)
-        if ($bo.Count -ge 1) { $bo[0] } else { $null }
-    }
-    else {
-        $null
-    }
-
-    for ($i = 0; $i -lt $max; $i++) {
-        $nic = if ($i -lt $nics.Count) { $nics[$i] } else { $null }
-        $dvd = if ($i -lt $dvds.Count) { $dvds[$i] } else { $null }
-        $vhd = if ($i -lt $vhds.Count) { $vhds[$i] } else { $null }
-
-        @(
-            "Name           : $($vm.Name)"
-            "VMPath         : $($vm.Path)"
-            "Generation     : $($vm.Generation)"
-            "MemoryStartup  : $([math]::Round($vm.MemoryStartup / 1GB, 2)) GB"
-            "CPUCount       : $($proc.Count)"
-            "StaticMemory   : $(-not $mem.DynamicMemoryEnabled)"
-            "AutoCheckpoint : $($vm.AutomaticCheckpointsEnabled)"
-            "SwitchName     : $($nic.SwitchName)"
-            "ISOPath        : $($dvd.Path)"
-            "VHDPath        : $($vhd.Path)"
-            "SecureBoot     : $secureBoot"
-            "FirstBootDev   : $firstBootDev"
-            ""
-        ) -join "`r`n"
-    }
-} | Out-String -Width 4096
+Get-VM | Select-Object Name, Path | Out-String -Width 4096
+Get-Variable | Out-String -Width 4096
 
 # create folder for VM
 New-Item -ItemType Directory -Path $VMPath -Force
@@ -94,9 +49,9 @@ New-Item -ItemType Directory -Path $VMPath -Force
 New-VM -Name $VMName `
     -Generation 2 `
     -Path $VMPath `
-    -MemoryStartupBytes ($VmMemoryStartupGigaBytes * 1GB) `
+    -MemoryStartupBytes ([UInt64]$VmMemoryStartupGigaBytes * 1GB) `
     -NewVHDPath $VHDPath `
-    -NewVHDSizeBytes ($VHDGigaBytesSize * 1GB) `
+    -NewVHDSizeBytes ([UInt64]$VHDGigaBytesSize * 1GB) `
     -SwitchName $VMSwitch
 
 # set VM
@@ -116,54 +71,14 @@ Set-VMFirmware -VMName $VMName `
     -FirstBootDevice (Get-VMDvdDrive -VMName $VMName) `
     -EnableSecureBoot Off
 
+# create initial checkpoint
+# https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/checkpoint-vm
+Checkpoint-VM -Name $VMName `
+    -SnapshotName "Init Checkpoint"
+
 # get statue(after)
-Get-VM | ForEach-Object {
-    $vm = $_
-
-    $proc = Get-VMProcessor -VMName $vm.Name
-    $mem = Get-VMMemory    -VMName $vm.Name
-    $fw = $null
-    try { $fw = Get-VMFirmware -VMName $vm.Name -ErrorAction Stop } catch { $fw = $null }
-    $nics = @(Get-VMNetworkAdapter -VMName $vm.Name -ErrorAction SilentlyContinue)
-    $dvds = @(Get-VMDvdDrive       -VMName $vm.Name -ErrorAction SilentlyContinue)
-    $vhds = @(Get-VMHardDiskDrive  -VMName $vm.Name -ErrorAction SilentlyContinue)
-    $max = @($nics.Count, $dvds.Count, $vhds.Count | Measure-Object -Maximum).Maximum
-    if (-not $max -or $max -lt 1) { $max = 1 }
-    $secureBoot = if ($fw -and ($fw.PSObject.Properties.Name -contains 'SecureBoot')) { $fw.SecureBoot } else { $null }
-    $firstBootDev =
-    if ($fw -and ($fw.PSObject.Properties.Name -contains 'FirstBootDevice')) {
-        $fw.FirstBootDevice
-    }
-    elseif ($fw -and ($fw.PSObject.Properties.Name -contains 'BootOrder')) {
-        $bo = @($fw.BootOrder)
-        if ($bo.Count -ge 1) { $bo[0] } else { $null }
-    }
-    else {
-        $null
-    }
-
-    for ($i = 0; $i -lt $max; $i++) {
-        $nic = if ($i -lt $nics.Count) { $nics[$i] } else { $null }
-        $dvd = if ($i -lt $dvds.Count) { $dvds[$i] } else { $null }
-        $vhd = if ($i -lt $vhds.Count) { $vhds[$i] } else { $null }
-
-        @(
-            "Name           : $($vm.Name)"
-            "VMPath         : $($vm.Path)"
-            "Generation     : $($vm.Generation)"
-            "MemoryStartup  : $([math]::Round($vm.MemoryStartup / 1GB, 2)) GB"
-            "CPUCount       : $($proc.Count)"
-            "StaticMemory   : $(-not $mem.DynamicMemoryEnabled)"
-            "AutoCheckpoint : $($vm.AutomaticCheckpointsEnabled)"
-            "SwitchName     : $($nic.SwitchName)"
-            "ISOPath        : $($dvd.Path)"
-            "VHDPath        : $($vhd.Path)"
-            "SecureBoot     : $secureBoot"
-            "FirstBootDev   : $firstBootDev"
-            ""
-        ) -join "`r`n"
-    }
-} | Out-String -Width 4096
+Get-VM | Select-Object Name, Path | Out-String -Width 4096
+Get-Variable | Out-String -Width 4096
 
 # start up the VM
 # https://learn.microsoft.com/ja-jp/powershell/module/hyper-v/start-vm
