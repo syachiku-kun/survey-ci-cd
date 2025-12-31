@@ -1,0 +1,17 @@
+name: "gitlab"
+services:
+  gitlab:
+    container_name: gitlab
+    image: gitlab/gitlab-ee:18.7.0-ee.0
+    restart: always
+    hostname: "gitlab"
+    ports:
+      - "18780:80"
+      - "18743:443"
+      - "18750:5000"
+    volumes:
+      - /opt/docker-containers/gitlab/gitlab/data:/var/opt/gitlab
+      - /opt/docker-containers/gitlab/gitlab/logs:/var/log/gitlab
+      - /opt/docker-containers/gitlab/gitlab/config:/etc/gitlab
+    command: >
+      bash -c 'sed -i "s|gloas-%{token}|%{token}|" /opt/gitlab/embedded/service/gitlab-rails/lib/gitlab/doorkeeper_secret_storing/token/unique_application_token.rb && exec /assets/wrapper'
